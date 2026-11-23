@@ -1,69 +1,99 @@
-# Health Report Prediction Model
+# 🩺 MediMind AI - Clinical Notes Diagnosis Analyzer & Decision Support
 
-A deep learning + NLP system that reads free-text clinical notes and suggests the most likely diagnosis, while surfacing similar historical cases so the suggestion is explainable rather than a black-box label.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-App-red.svg)](https://streamlit.io/)
+[![Sentence--Transformers](https://img.shields.io/badge/Sentence--Transformers-Embeddings-purple.svg)](https://www.sbert.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
+An intelligent clinical decision-support platform that transforms unstructured physician EHR narratives, admission summaries, and triage notes into explainable, evidence-backed differential diagnosis recommendations mapped directly to ICD-10 diagnostic codes.
 
-Clinicians and health-tech teams often have large archives of unstructured clinical notes but no easy way to search them semantically or use them to support new diagnoses. This project turns a 5,000-record clinical notes dataset into a searchable, predictive knowledge base using **Sentence-BERT embeddings**, **cosine similarity**, and a **hybrid neural network**.
+---
 
-## How It Works
+## 🔬 System Overview & Architecture
 
-1. **Data Cleaning**
-Raw clinical notes are lowercased, stripped of noise characters, and standardized while preserving clinically relevant tokens (units like mg/dL, %, etc.).
-2. **Embedding Generation**
-Each note is encoded into a 384-dimension vector using the `all-MiniLM-L6-v2` Sentence Transformer (a distilled BERT-family model), with embeddings L2-normalized for cosine similarity.
-3. **Diagnosis Suggestion**
-For a new note, the system computes cosine similarity against all historical embeddings and returns the top-k most similar past cases along with their recorded diagnoses and similarity scores.
-4. **Dual-Score Matching**
-A key feature: when two historical cases both closely match the query *and* closely resemble each other, the system reports
-5. **all three similarity scores**
-query-vs-A, query-vs-B, and A-vs-B — so users can see when multiple similar cases agree on a diagnosis, increasing confidence.
-6. **Demographic Enrichment**
-Age and gender are extracted from note text via regex and scaled/encoded as auxiliary features.
-7. **Hybrid Deep Learning Model**
-A Keras model combines the text embedding branch (Dense + Dropout) with the demographic branch (Dense) via concatenation, feeding into a softmax classifier over diagnosis classes — combining semantic meaning with patient context.
-8. **Evaluation & Visualization**
-Model performance is assessed with precision/recall/F1 classification reports (visualized as heatmaps), and note embeddings are projected into 2D via UMAP and plotted interactively with Plotly to visually inspect diagnosis clustering.
+MediMind AI combines dense contextual semantic embeddings with a hybrid neural network architecture to ingest raw doctor notes and patient demographic variables (Age, Gender) simultaneously:
 
-## Outcome
+```mermaid
+flowchart TD
+    A[Unstructured Clinical Note / EHR Narrative] --> B[Clinical Regex Preprocessing & Entity Extraction]
+    B --> C1[Sentence-BERT Semantic Vector Space]
+    B --> C2[Demographics Pipeline - Age & Biological Sex]
+    C1 --> D[Cosine Case Retrieval Engine]
+    C1 & C2 --> E[Hybrid Neural Network Fusion Layer]
+    E --> F[Differential Diagnosis Probabilities]
+    D & F --> G[Interactive Streamlit Clinical Diagnostic Workspace]
+```
 
-- A working pipeline that converts unstructured clinical text into dense semantic vectors and retrieves clinically similar past cases in real time.
+---
 
-- A hybrid model that predicts diagnosis from **both** the language of the note and basic demographics (age, gender), outputting a full probability distribution across diagnosis classes rather than a single label.
+## ✨ Key Features
 
-- Transparent, evidence-backed predictions: instead of "trust the model," the system shows *which* past cases informed the suggestion and *how similar* they are — both to the new note and to each other.
+- **Semantic Case Retrieval:** Computes cosine similarity across thousands of indexed historical patient cases to surface similar clinical presentations.
+- **Hybrid Multi-Modal Fusion:** Merges dense note representations with tabular demographic factors for context-aware diagnosis.
+- **Automated Entity Parsing:** Intelligently extracts patient age, biological sex, and acute clinical findings without manual tagging.
+- **Interactive Streamlit Workspace:** Doctor-friendly web interface featuring preset clinical vignettes (Heart Failure, MI, Pneumonia, Pancreatitis, Diabetic Foot Ulcer), probability bar charts, and ICD-10 mappings.
+- **Explainable AI (XAI):** Transparently exposes matched clinical findings and historical reference cases instead of providing black-box outputs.
 
-- Clear visual diagnostics (classification heatmap, UMAP scatter plot, top-5 probability bar charts) that make it easy to see where the model performs well and where diagnosis classes overlap semantically.
+---
 
-## Future Uses
+## 📊 Diagnostic Categories Covered
 
-- **Clinical decision support tool**:
-integrate into an EHR system as a second-opinion assistant that flags similar historical cases for physicians reviewing new patients.
-- **Triage automation**:
-rank incoming patient notes by urgency/similarity to known critical cases.
-- **Expanded feature set**:
-incorporate structured data (labs, vitals, medication history) alongside notes for richer hybrid predictions.
-- **Larger/domain-specific transformers**:
-swap in clinical-domain models (e.g., BioBERT, ClinicalBERT) for improved medical language understanding.
-- **Active learning loop**:
-let clinicians confirm/correct predictions, feeding corrections back to continuously retrain and improve the model.
-- **API/dashboard deployment**:
-wrap the pipeline in a Flask/FastAPI service with a web dashboard so non-technical staff can query the system directly.
-- **Multi-label and rare-disease detection**:
-extend beyond single-diagnosis classification to flag co-occurring conditions and rare diseases underrepresented in training data.
+| Category | Primary Presentation | ICD-10 Code |
+| :--- | :--- | :--- |
+| **Congestive Heart Failure** | Dyspnea on exertion, orthopnea, bilateral edema, elevated BNP | `I50.9` |
+| **Acute Myocardial Infarction** | Retrosternal radiating chest pain, diaphoresis, ST elevations | `I21.9` |
+| **Community-Acquired Pneumonia** | Productive purulent cough, fever, chills, lobar consolidation | `J18.9` |
+| **Chronic Kidney Disease** | Proteinuria, elevated creatinine, electrolyte imbalance | `N18.9` |
+| **Asthma Exacerbation** | Severe expiratory wheezing, bronchospasm, reduced peak flow | `J45.901` |
+| **Acute Pancreatitis** | Severe epigastric abdominal pain radiating to back, elevated lipase | `K85.9` |
+| **Diabetic Foot Ulcer** | Plantar metatarsal neuropathic ulcer, diminished sensation | `E11.621` |
+| **Meningitis** | Nuchal rigidity, photophobia, headache, positive Kernig/Brudzinski | `G03.9` |
+| **Alzheimer's Disease** | Progressive memory impairment, disorientation, cognitive decline | `G30.9` |
+| **Surgical Site Infection** | Incisional erythema, purulent drainage, postoperative fever | `T81.4XXA` |
 
-## Tech Stack
+---
 
-Python
-Sentence-Transformers
-scikit-learn
-TensorFlow/Keras
-UMAP
-Plotly
-Matplotlib/Seaborn
-Pandas
-NumPy.
+## 🚀 Quickstart & Local Setup
 
-## Disclaimer
+### 1. Clone the repository
+```bash
+git clone https://github.com/30Piyush2025/Health-Report-Prediction-Model.git
+cd Health-Report-Prediction-Model
+```
 
-This project is for research and educational purposes only. It is **not** a certified medical device and should not be used for real clinical decision-making without proper validation, regulatory approval, and clinician oversight.# Health-Report-Prediction-Model
+### 2. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Launch the Interactive Clinical Assistant
+```bash
+streamlit run app.py
+```
+Open your browser at `http://localhost:8501`.
+
+---
+
+## 📂 Repository Structure
+
+```text
+Health-Report-Prediction-Model/
+├── app.py                                  # Streamlit Clinical Assistant Web Application
+├── requirements.txt                        # Python dependencies
+├── src/
+│   ├── preprocessor.py                     # Medical text cleaner & regex entity extractor
+│   ├── similarity_matcher.py               # Semantic case matcher & ICD-10 reference base
+│   └── hybrid_model.py                     # Multi-modal fusion & probability estimator
+├── Health_Report_prediction_model.ipynb    # Research & model exploration notebook
+└── README.md                               # Comprehensive documentation
+```
+
+---
+
+## ⚠️ Clinical Disclaimer
+This system is an investigational decision-support AI designed to augment clinical triage and education. It is not an autonomous diagnostic device and should never replace clinical evaluation by a licensed healthcare professional.
+
+---
+
+## 👤 Author
+- **Piyush** - [GitHub Profile](https://github.com/30Piyush2025)
